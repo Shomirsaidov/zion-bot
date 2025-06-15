@@ -1,7 +1,7 @@
 // api/bot.js
 
 const TOKEN = '7883351227:AAELRDLaZLimPbLVZVAV0I4ZRYP1c6tQMH8';
-const WEB_APP_URL = 'https://v0-ziontrade.vercel.app/'; // Replace with your actual Telegram Web App URL
+const WEB_APP_URL = 'https://v0-ziontrade-weld.vercel.app/'; // Replace with your actual Telegram Web App URL
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
