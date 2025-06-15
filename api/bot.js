@@ -1,6 +1,6 @@
 // api/bot.js
 
-const TOKEN = '7186220407:AAFbR2vuSlM83uYlo6hJkBlnHKKwqIJ6Hog';
+const TOKEN = '7883351227:AAELRDLaZLimPbLVZVAV0I4ZRYP1c6tQMH8';
 const WEB_APP_URL = 'https://v0-ziontrade.vercel.app/'; // Replace with your actual Telegram Web App URL
 
 export default async function handler(req, res) {
