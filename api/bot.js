@@ -8,23 +8,26 @@ export default async function handler(req, res) {
 
   const data = req.body;
 
-  if (data.message?.text === '/start') {
-    const chatId = data.message.chat.id;
+  
+  const chatId = data.message.chat.id;
 
-    await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: 'Нажмите снизу чтоб открыть приложение:',
-        reply_markup: {
-          inline_keyboard: [[
-            { text: '🚀 Запустить', web_app: { url: WEB_APP_URL } }
-          ]]
-        }
-      })
-    });
-  }
+  await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: 'Нажмите снизу чтоб открыть приложение:',
+      reply_markup: {
+        inline_keyboard: [[
+          { text: '🚀 Запустить', web_app: { url: WEB_APP_URL } }
+        ]]
+      }
+    })
+  });
+  
 
   res.status(200).send('OK');
 }
+
+
+
