@@ -1,5 +1,6 @@
 // api/bot.js
 
+
 const TOKEN = '7883351227:AAELRDLaZLimPbLVZVAV0I4ZRYP1c6tQMH8';
 const WEB_APP_URL = 'https://v0-ziontrade1.vercel.app/';
 const SUPABASE_URL = 'https://ytuiwwlkkqsuhbohywfb.supabase.co';
@@ -19,41 +20,65 @@ export default async function handler(req, res) {
   const fromId = message.from.id?.toString();
   const fromUsername = message.from.username || 'unknown';
 
-  // Check if this is a /start command with referral
   const text = message.text || '';
   const isStartWithReferral = text.startsWith('/start ref_');
 
   if (isStartWithReferral) {
     const referralCode = text.split(' ')[1].replace('ref_', '');
 
-    // Insert referral into Supabase
+    // 🔎 1. Get referrer's username from user_agreements table
+    let referrerUsername = null;
+
     try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/user_referrals`, {
-        method: 'POST',
+      const queryUrl = `${SUPABASE_URL}/rest/v1/user_agreements?telegram_id=eq.${referralCode}&select=tg_username`;
+      const lookup = await fetch(queryUrl, {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'apikey': SUPABASE_API_KEY,
-          'Authorization': `Bearer ${SUPABASE_API_KEY}`,
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({
-          referrer_telegram_id: referralCode,
-          referrer_username: 'unknown', // optional to fill later
-          referred_telegram_id: fromId,
-          referred_username: fromUsername,
-          referral_code: referralCode
-        })
+          'Authorization': `Bearer ${SUPABASE_API_KEY}`
+        }
       });
 
-      if (!response.ok) {
-        console.error('Failed to save referral to Supabase', await response.text());
+      const refData = await lookup.json();
+      if (Array.isArray(refData) && refData.length > 0) {
+        referrerUsername = refData[0].tg_username;
       }
-    } catch (error) {
-      console.error('Error saving referral:', error);
+    } catch (err) {
+      console.error('Failed to look up referrer username:', err);
+    }
+
+    // ✅ 2. Insert referral record if username was found
+    if (referrerUsername) {
+      try {
+        const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/user_referrals`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_API_KEY,
+            'Authorization': `Bearer ${SUPABASE_API_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            referrer_telegram_id: referralCode,
+            referrer_username: referrerUsername,
+            referred_telegram_id: fromId,
+            referred_username: fromUsername,
+            referral_code: referralCode
+          })
+        });
+
+        if (!insertRes.ok) {
+          console.error('Failed to insert referral:', await insertRes.text());
+        }
+      } catch (err) {
+        console.error('Referral insert error:', err);
+      }
+    } else {
+      console.warn('No matching username found for referrer, skipping insert.');
     }
   }
 
-  // Always send the web app launch button
+  // 📦 Send Web App Button
   await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -70,3 +95,6 @@ export default async function handler(req, res) {
 
   res.status(200).send('OK');
 }
+
+
+
